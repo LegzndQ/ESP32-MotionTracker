@@ -2,8 +2,9 @@
  * 无任何滤波版本
  * 采样率为100Hz，可调
  * 上电就一直输出数据
- * 可Wifi通信连接Python上位机
+ * 可Wifi通信连接Python上位机 test
  */
+
 #include <WiFi.h>
 #include <Wire.h>
 #include <MPU6050.h>
