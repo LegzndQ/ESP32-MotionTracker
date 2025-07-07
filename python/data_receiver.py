@@ -13,5 +13,5 @@ with open("train_data.csv", "a") as file:
         decoded_data = data.decode()
         n=n+1
         if n%10 == 0:
-            print("收到数据:", decoded_data)
+            print("收到的数据:", decoded_data)
         file.write(decoded_data + "\n")
