@@ -2,10 +2,7 @@ import pygame
 import socket
 import threading
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
 from collections import deque
-import time
 
 # Wi-Fi 配置
 ESP32_IP = "0.0.0.0"  # 监听所有 IP
@@ -16,19 +13,13 @@ pygame.init()
 screen = pygame.display.set_mode((800, 600))
 pygame.display.set_caption("MPU6050 3D Visualization")
 
-# 初始化 3D 图形窗口
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-
-# 初始化 x 轴加速度波形图窗口
-fig_accel_x, ax_accel_x = plt.subplots(figsize=(10, 6))
-
 # 数据存储
 gyro_data = [0, 0, 0]  # 陀螺仪数据
-accel_data = [0, 0, 0]  # 加速度数据
+roll, pitch, yaw = 0, 0, 0  # 姿态角（单位：度）
 timestamps = deque(maxlen=500)  # 时间戳队列
-accel_history = deque(maxlen=500)  # 加速度历史数据
-gyro_history = deque(maxlen=500)  # 陀螺仪历史数据
+
+# 时间步长（假设数据接收频率为 100Hz）
+dt = 0.01  # 每次更新的时间间隔（秒）
 
 # 接收数据函数
 # @brief 接收来自 ESP32 的 UDP 数据包，并写入文件。
@@ -77,37 +68,60 @@ def receive_data():
 
 # 启动接收数据线程
 thread = threading.Thread(target=receive_data)
-thread.daemon = True # 设置为守护线程
+thread.daemon = True  # 设置为守护线程
 thread.start()
 
 # 绘制 3D 图形
-def draw_3d(ax, gyro_data):
-    ax.clear()
-    ax.quiver(0, 0, 0, gyro_data[0], gyro_data[1], gyro_data[2], length=1, color='r')
-    ax.set_xlim([-1, 1])
-    ax.set_ylim([-1, 1])
-    ax.set_zlim([-1, 1])
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    plt.pause(0.01) # 更新图形
+def draw_3d(screen, roll, pitch, yaw):
+    screen.fill((0, 0, 0))  # 清空屏幕
 
-# 绘制 x 轴加速度随时间变化的波形图
-def draw_accel_x(ax, timestamps, accel_history):
-    ax.clear()
+    # 将姿态角转换为旋转矩阵
+    roll_rad = np.radians(roll)
+    pitch_rad = np.radians(pitch)
+    yaw_rad = np.radians(yaw)
 
-    # 确保历史数据不为空
-    if len(accel_history) > 0:
-        accel_array = np.array(accel_history)
-        ax.plot(timestamps, accel_array[:, 0], label="Accel X", color="r")
-        ax.set_title("X-Axis Acceleration")
-        ax.set_xlabel("Time")
-        ax.set_ylabel("Acceleration (g)")
-        ax.legend()
-    else:
-        print("加速度历史数据为空，无法绘制波形图")
+    # 绘制一个简单的立方体表示姿态
+    center = (400, 300)  # 屏幕中心
+    size = 100  # 立方体大小
 
-    plt.pause(0.01)  # 更新图形
+    # 计算旋转后的顶点位置
+    points = [
+        (-size, -size, -size),
+        (size, -size, -size),
+        (size, size, -size),
+        (-size, size, -size),
+        (-size, -size, size),
+        (size, -size, size),
+        (size, size, size),
+        (-size, size, size),
+    ]
+
+    # 旋转矩阵
+    rotation_matrix = np.array([
+        [np.cos(yaw_rad) * np.cos(pitch_rad), np.cos(yaw_rad) * np.sin(pitch_rad) * np.sin(roll_rad) - np.sin(yaw_rad) * np.cos(roll_rad), np.cos(yaw_rad) * np.sin(pitch_rad) * np.cos(roll_rad) + np.sin(yaw_rad) * np.sin(roll_rad)],
+        [np.sin(yaw_rad) * np.cos(pitch_rad), np.sin(yaw_rad) * np.sin(pitch_rad) * np.sin(roll_rad) + np.cos(yaw_rad) * np.cos(roll_rad), np.sin(yaw_rad) * np.sin(pitch_rad) * np.cos(roll_rad) - np.cos(yaw_rad) * np.sin(roll_rad)],
+        [-np.sin(pitch_rad), np.cos(pitch_rad) * np.sin(roll_rad), np.cos(pitch_rad) * np.cos(roll_rad)],
+    ])
+
+    # 旋转顶点
+    rotated_points = []
+    for point in points:
+        rotated_point = np.dot(rotation_matrix, point)
+        rotated_points.append(rotated_point)
+
+    # 投影到屏幕
+    projected_points = [(center[0] + p[0], center[1] - p[1]) for p in rotated_points]
+
+    # 绘制立方体的边
+    edges = [
+        (0, 1), (1, 2), (2, 3), (3, 0),
+        (4, 5), (5, 6), (6, 7), (7, 4),
+        (0, 4), (1, 5), (2, 6), (3, 7),
+    ]
+    for edge in edges:
+        pygame.draw.line(screen, (255, 255, 255), projected_points[edge[0]], projected_points[edge[1]], 2)
+
+    pygame.display.flip()  # 更新屏幕
 
 # 主循环
 running = True
@@ -115,20 +129,13 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_a:  # 按下 "a" 键
-                print(f"加速度数据: {accel_data}")
-            elif event.key == pygame.K_g:  # 按下 "g" 键
-                print(f"陀螺仪数据: {gyro_data}")
 
-    # 更新 3D 图形窗口
-    draw_3d(ax, gyro_data)
+    # 更新姿态角
+    roll += gyro_data[0] * dt
+    pitch += gyro_data[1] * dt
+    yaw += gyro_data[2] * dt
 
-    # 更新 x 轴加速度波形图窗口
-    draw_accel_x(ax_accel_x, timestamps, accel_history)
-
-    # 更新 pygame 窗口
-    screen.fill((0, 0, 0))  # 清空屏幕
-    pygame.display.flip()  # 将缓冲区内容复制到屏幕上
+    # 绘制 3D 图形
+    draw_3d(screen, roll, pitch, yaw)
 
 pygame.quit()
