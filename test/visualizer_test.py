@@ -32,29 +32,44 @@ gyro_history = deque(maxlen=500)  # 陀螺仪历史数据
 # @brief 接收来自 ESP32 的 UDP 数据包，并写入文件。
 def receive_data():
     global gyro_data, accel_data, timestamps, accel_history, gyro_history
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((ESP32_IP, ESP32_PORT))
     
-    # 打开文件写入数据
+    buffer = ""  # 用于存储未处理的接收数据
+
     with open("mpu6050_data.txt", "w") as file:
         while True:
             data, addr = sock.recvfrom(1024)
             try:
-                decoded_data = data.decode("utf-8").strip().split(",")
-                timestamp = int(decoded_data[0])  # 时间戳
-                accel_data = list(map(float, decoded_data[1:4]))  # 加速度数据
-                gyro_data = list(map(float, decoded_data[4:]))   # 陀螺仪数据
+                # 将接收到的数据解码并添加到缓冲区
+                buffer += data.decode("utf-8")
 
-                # 更新历史数据
-                timestamps.append(timestamp)
-                accel_history.append(accel_data)
-                gyro_history.append(gyro_data)
+                # 按换行符分割数据
+                lines = buffer.split("\n")
+                buffer = lines[-1]  # 保留最后一个未完成的数据
 
-                # 写入文件
-                decoded_data_str = data.decode()
-                print("收到数据:", decoded_data_str)
-                file.write(decoded_data_str + "\n")
-                file.flush()  # 数据实时写入文件
+                # 处理完整的行数据
+                for line in lines[:-1]:
+                    decoded_data = line.strip().split(",")
+                    
+                    # 验证数据格式
+                    if len(decoded_data) != 7:  # 时间戳 + 3 轴加速度 + 3 轴角速度
+                        print(f"数据格式错误: {decoded_data}")
+                        continue
+                    
+                    # 解析数据
+                    timestamp = int(decoded_data[0])  # 时间戳
+                    accel_data = list(map(float, decoded_data[1:4]))  # 加速度数据
+                    gyro_data = list(map(float, decoded_data[4:]))   # 陀螺仪数据
+
+                    # 更新历史数据
+                    timestamps.append(timestamp)
+                    accel_history.append(accel_data)
+                    gyro_history.append(gyro_data)
+
+                    # 写入文件
+                    file.write(line + "\n")
+                    file.flush()
             except Exception as e:
                 print(f"数据解析错误: {e}")
 
