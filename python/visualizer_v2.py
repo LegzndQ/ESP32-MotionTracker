@@ -32,14 +32,20 @@ gyro_data = [0, 0, 0]  # 陀螺仪数据
 accel_data = [0, 0, 0]  # 加速度数据
 latest_quaternion = Quaternion(1, 0, 0, 0)  # 初始四元数
 
+def ensure_quaternion_continuity(prev_q, new_q):
+    # 如果新四元数与前一个四元数方向相反，则翻转新四元数
+    if (prev_q.w * new_q.w + prev_q.x * new_q.x + prev_q.y * new_q.y + prev_q.z * new_q.z) < 0:
+        return Quaternion(-new_q.w, -new_q.x, -new_q.y, -new_q.z)
+    return new_q
+
 # 接收数据函数
 # @brief 接收来自 ESP32 的 UDP 数据包，并写入文件。
 def receive_data():
     global latest_quaternion, gyro_data, accel_data, timestamps, accel_history, gyro_history
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((ESP32_IP, ESP32_PORT))
-    
-    buffer = ""  # 用于存储未处理的接收数据
+
+    prev_quaternion = Quaternion(1, 0, 0, 0)  # 初始四元数
 
     with open("mpu6050_data.txt", "w") as file:
         while True:
@@ -53,13 +59,15 @@ def receive_data():
                     gyro_data = list(map(float, decoded_data[4:7]))   # 陀螺仪数据
                     q_w, q_x, q_y, q_z = map(float, decoded_data[7:11])
 
+                    # 确保四元数连续性
+                    new_quaternion = Quaternion(q_w, q_x, q_y, q_z)
+                    latest_quaternion = ensure_quaternion_continuity(prev_quaternion, new_quaternion)
+                    prev_quaternion = latest_quaternion
+                    
                     # 更新历史数据
                     timestamps.append(timestamp)
                     accel_history.append(accel_data)
                     gyro_history.append(gyro_data)
-
-                    latest_quaternion = Quaternion(q_w, q_x, q_y, q_z)
-
 
                     # 写入文件
                     decoded_data_str = data.decode()
