@@ -1,5 +1,5 @@
 /**
- * 无任何滤波版本
+ * V1.1 加速度和陀螺仪经过dmp处理版本，可与原始版本进行对比
  * 采样率为100Hz，可调
  * 上电就一直输出数据
  * 可Wifi通信连接Python上位机
@@ -73,25 +73,27 @@ void setup() {
 }
 
 void loop() {
-    // 定期读取 MPU6050 的数据
-    int16_t ax, ay, az, gx, gy, gz;
-    mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz); // 获取加速度和陀螺仪数据
-
-    // 将原始数据转换为标准单位
-    float accelX = ax / 16384.0f; // 加速度计数据（单位：g）
-    float accelY = ay / 16384.0f;
-    float accelZ = az / 16384.0f;
-    float gyroX = gx / 131.0f;    // 陀螺仪数据（单位：°/s）
-    float gyroY = gy / 131.0f;
-    float gyroZ = gz / 131.0f;
 
     uint16_t fifoCount = mpu.getFIFOCount(); // 获取 FIFO 缓冲区的字节数
-    if (fifoCount >= mpu.dmpGetFIFOPacketSize()) {
-        uint8_t fifoBuffer[64]; // FIFO 缓冲区
+    if (fifoCount >= mpu.dmpGetFIFOPacketSize()) { // 检查FIFO 缓冲区是否有一个完整数据包
+        uint8_t fifoBuffer[64]; 
         mpu.getFIFOBytes(fifoBuffer, mpu.dmpGetFIFOPacketSize());
-        Quaternion q;
-        mpu.dmpGetQuaternion(&q, fifoBuffer); // 从 FIFO 缓冲区获取四元数
         
+        Quaternion q;
+        VectorInt16 accel,gyro;
+        
+        mpu.dmpGetQuaternion(&q, fifoBuffer); 
+        mpu.dmpGetAccel(&accel, fifoBuffer);
+        mpu.dmpGetGyro(&gyro, fifoBuffer);
+
+        // 将数据转换为标准单位
+        float accelX = accel.x / 16384.0f; // 加速度计数据（单位：g）
+        float accelY = accel.y / 16384.0f;
+        float accelZ = accel.z / 16384.0f;
+        float gyroX = gyro.x / 131.0f;    // 陀螺仪数据（单位：°/s）
+        float gyroY = gyro.y / 131.0f;
+        float gyroZ = gyro.z / 131.0f;
+
          // 提取四元数分量
          q_w = q.w;
          q_x = q.x;
