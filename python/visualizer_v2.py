@@ -45,36 +45,27 @@ def receive_data():
         while True:
             data, addr = sock.recvfrom(1024)
             try:
-                # 将接收到的数据解码并添加到缓冲区
-                buffer += data.decode("utf-8")
+                decoded_data = data.decode("utf-8").strip().split(",")   
+                if len(decoded_data) == 11:
+                    # 解析数据
+                    timestamp = int(decoded_data[0])  # 时间戳
+                    accel_data = list(map(float, decoded_data[1:4]))  # 加速度数据
+                    gyro_data = list(map(float, decoded_data[4:]))   # 陀螺仪数据
+                    q_w, q_x, q_y, q_z = map(float, decoded_data[7:11])
 
-                # 按换行符分割数据
-                lines = buffer.split("\n")
-                buffer = lines[-1]  # 保留最后一个未完成的数据
+                    # 更新历史数据
+                    timestamps.append(timestamp)
+                    accel_history.append(accel_data)
+                    gyro_history.append(gyro_data)
 
-                # 处理完整的行数据
-                for line in lines[:-1]:
-                    decoded_data = line.strip().split(",")
-                    
-                    if len(decoded_data) == 11:
-                        # 解析数据
-                        timestamp = int(decoded_data[0])  # 时间戳
-                        accel_data = list(map(float, decoded_data[1:4]))  # 加速度数据
-                        gyro_data = list(map(float, decoded_data[4:]))   # 陀螺仪数据
-                        q_w, q_x, q_y, q_z = map(float, decoded_data[7:11])
-
-                        # 更新历史数据
-                        timestamps.append(timestamp)
-                        accel_history.append(accel_data)
-                        gyro_history.append(gyro_data)
-
-                        latest_quaternion = Quaternion(q_w, q_x, q_y, q_z)
+                    latest_quaternion = Quaternion(q_w, q_x, q_y, q_z)
 
 
-                        # 写入文件
-                        print(f"接收到数据: {line}")
-                        file.write(line + "\n")
-                        file.flush()
+                    # 写入文件
+                    decoded_data_str = data.decode()
+                    print("收到数据:", decoded_data_str)
+                    file.write(decoded_data_str + "\n")
+                    file.flush()  # 数据实时写入文件
             except Exception as e:
                 print(f"数据解析错误: {e}")
 
