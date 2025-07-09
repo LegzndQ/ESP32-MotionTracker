@@ -1,3 +1,6 @@
+# 基于 MPU6050 的 motion_driver_6.12 中的 python 上位机改写
+# 通过 udp 协议接收数据，并可显示传感器姿态
+
 import pygame
 import socket
 import threading
@@ -55,13 +58,13 @@ def receive_data():
                     
                     if len(decoded_data) == 11:
                         # 解析数据
-                        timestamps = int(decoded_data[0])  # 时间戳
+                        timestamp = int(decoded_data[0])  # 时间戳
                         accel_data = list(map(float, decoded_data[1:4]))  # 加速度数据
                         gyro_data = list(map(float, decoded_data[4:]))   # 陀螺仪数据
                         q_w, q_x, q_y, q_z = map(float, decoded_data[7:11])
 
                         # 更新历史数据
-                        timestamps.append(timestamps)
+                        timestamps.append(timestamp)
                         accel_history.append(accel_data)
                         gyro_history.append(gyro_data)
 
@@ -128,7 +131,8 @@ def draw_accel_gyro(ax_accel, ax_gyro, timestamps, accel_history, gyro_history):
         ax_gyro.set_ylim([-125, 125])  # 角速度的量程为 -125 到 125
     else:
         print("加速度或角速度历史数据为空，无法绘制波形图")  # 可添加标志变量，避免频繁打印
-
+    
+    pygame.display.flip()  
     plt.pause(0.01)  # 更新图形
 
 # 主循环
