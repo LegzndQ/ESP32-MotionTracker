@@ -78,7 +78,7 @@ class Edge (object):
     def centroid(self):
         return (self.a + self.b) / 2
     def draw(self,screen):
-        assert isinstance(screen,Screen) 
+        assert isinstance(screen,Screen)
         aa = screen.project(self.a)
         bb = screen.project(self.b)
         pygame.draw.line(screen.i, self.color, aa,bb)
@@ -87,8 +87,8 @@ class Edge (object):
         self.color = clear_color
         self.draw(screen)
         self.color = c
-        
-        
+
+
 
 class Cube (object):
     def __init__(self,a=10,b=10,c=10):
@@ -98,7 +98,7 @@ class Cube (object):
         self.pts = [ Vector3(-a,b,c)  , Vector3(a,b,c)
                    , Vector3(a,-b,c)  , Vector3(-a,-b,c)
                    , Vector3(-a,b,-c) , Vector3(a,b,-c)
-                   , Vector3(a,-b,-c) , Vector3(-a,-b,-c) ] 
+                   , Vector3(a,-b,-c) , Vector3(-a,-b,-c) ]
 
     def origin(self):
         """ reset self.pts to the origin, so we can give them a new rotation """
@@ -106,7 +106,7 @@ class Cube (object):
         self.pts = [ Vector3(-a,b,c)  , Vector3(a,b,c)
                    , Vector3(a,-b,c)  , Vector3(-a,-b,c)
                    , Vector3(-a,b,-c) , Vector3(a,b,-c)
-                   , Vector3(a,-b,-c) , Vector3(-a,-b,-c) ] 
+                   , Vector3(a,-b,-c) , Vector3(-a,-b,-c) ]
 
     def sides(self):
         """ each side is a Side object of a certain color """
@@ -169,7 +169,7 @@ if __name__ == "__main__":
     cube = Cube(40,30,60)
     q = Quaternion(1,0,0,0)
     incr = Quaternion(0.96,0.01,0.01,0).normalized()
-    
+
     while 1:
         q = q * incr
         cube.draw(screen,q)
@@ -178,6 +178,5 @@ if __name__ == "__main__":
             or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
             break
         pygame.display.flip()
-        pygame.time.delay(50) 
+        pygame.time.delay(50)
         cube.erase(screen)
-
