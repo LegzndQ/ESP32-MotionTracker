@@ -55,13 +55,13 @@ def receive_data():
                     
                     if len(decoded_data) == 11:
                         # 解析数据
-                        timestamps = int(decoded_data[0])  # 时间戳
+                        timestamp = int(decoded_data[0])  # 时间戳
                         accel_data = list(map(float, decoded_data[1:4]))  # 加速度数据
                         gyro_data = list(map(float, decoded_data[4:]))   # 陀螺仪数据
                         q_w, q_x, q_y, q_z = map(float, decoded_data[7:11])
 
                         # 更新历史数据
-                        timestamps.append(timestamps)
+                        timestamps.append(timestamp)
                         accel_history.append(accel_data)
                         gyro_history.append(gyro_data)
 
@@ -87,7 +87,8 @@ thread.start()
 def draw_3d(quaternion):
     cube.erase(screen) 
     cube.draw(screen, quaternion.normalized())  
-    pygame.display.flip()  
+    pygame.display.flip() 
+    pygame.time.delay(10)
 
 
 

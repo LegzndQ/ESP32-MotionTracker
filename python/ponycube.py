@@ -159,9 +159,18 @@ class Cube (object):
         [ s.draw(screen) for s in drawables ]
 
     def rotate(self,q):
-        assert isinstance(q,Quaternion)
-        R = q.get_matrix()
-        self.pts = [R*p for p in self.pts]
+        assert isinstance(q, Quaternion)
+        # 调整四元数的旋转角度
+        angle = 2 * acos(q.w)  # 提取实际旋转角度
+        axis = Vector3(q.x, q.y, q.z).normalized()  # 提取旋转轴
+        adjusted_q = Quaternion.new_rotate_axis(angle, axis)  # 创建调整后的四元数
+        R = adjusted_q.get_matrix()  # 生成旋转矩阵
+        self.pts = [R * p for p in self.pts]  # 应用旋转矩阵到顶点
+
+    # def rotate(self,q):
+    #         assert isinstance(q,Quaternion)
+    #         R = q.get_matrix()
+    #         self.pts = [R*p for p in self.pts]
 
 if __name__ == "__main__":
     pygame.init()
