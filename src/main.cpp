@@ -58,7 +58,7 @@ void setup() {
     }
 
     // 配置 MPU6050 的参数
-    mpu.setRate(79);         // 设置采样率为100Hz
+    mpu.setRate(39);         // 设置采样率为200Hz，匹配DMP
     mpu.setFullScaleGyroRange(MPU6050_GYRO_FS_250); // 设置陀螺仪量程为±250度/秒
     mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_2); // 设置加速度量程为±2g
 
