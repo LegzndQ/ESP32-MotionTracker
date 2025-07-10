@@ -35,10 +35,8 @@ import math
 import operator
 import types
 
-try:
-    long
-except NameError:
-    long = int
+# 在 Python 3 中，直接使用 int 即可
+long = int
 
 # Some magic here.  If _use_slots is True, the classes will derive from
 # object and will define a __slots__ class variable.  If _use_slots is

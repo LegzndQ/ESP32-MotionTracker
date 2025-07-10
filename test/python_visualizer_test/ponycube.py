@@ -171,7 +171,7 @@ class Cube (object):
             assert isinstance(q,Quaternion)
             R = q.get_matrix()
             self.pts = [R*p for p in self.pts]
-            
+
 if __name__ == "__main__":
     pygame.init()
     screen = Screen(480,400,scale=1.5)
