@@ -1,8 +1,11 @@
 #include "MPU6050Handler.h"
 #include <Wire.h>
+#include "config.h"
 
-void MPU6050Handler::initialize() {
-    Wire.begin(21, 20); // 初始化I2C总线，SDA、SCL引脚
+MPU6050Handler::MPU6050Handler() : mpu(MPU6050_DEFAULT_ADDRESS) {}
+
+void MPU6050Handler::init() {
+    Wire.begin(I2C_SDA, I2C_SCL); // 初始化I2C总线，SDA、SCL引脚
     mpu.initialize(); // 初始化MPU6050
 
 	uint8_t devStatus = mpu.dmpInitialize(); // 初始化 DMP
@@ -20,11 +23,15 @@ void MPU6050Handler::initialize() {
 
 }
 
-bool MPU6050Handler::readData(float &accelX, float &accelY, float &accelZ,
-                              float &gyroX, float &gyroY, float &gyroZ,
-                              float &qW, float &qX, float &qY, float &qZ) {
+MPUData MPU6050Handler::readData() {
+    MPUData data;
+
     uint16_t fifoCount = mpu.getFIFOCount(); // 获取 FIFO 缓冲区的字节数
+    
     if (fifoCount >= mpu.dmpGetFIFOPacketSize()) { // 检查FIFO 缓冲区是否有一个完整数据包
+        // 读取数据并设置 valid = true
+        data.valid = true;
+        
         uint8_t fifoBuffer[64]; 
         mpu.getFIFOBytes(fifoBuffer, mpu.dmpGetFIFOPacketSize());
         
@@ -36,20 +43,21 @@ bool MPU6050Handler::readData(float &accelX, float &accelY, float &accelZ,
         mpu.dmpGetGyro(&gyro, fifoBuffer);
 
         // 将数据转换为标准单位
-        accelX = accel.x / 16384.0f; // 加速度计数据（单位：g）
-        accelY = accel.y / 16384.0f;
-        accelZ = accel.z / 16384.0f;
-        gyroX = gyro.x / 131.0f;    // 陀螺仪数据（单位：°/s）
-        gyroY = gyro.y / 131.0f;
-        gyroZ = gyro.z / 131.0f;
+        data.accelX = accel.x / 16384.0f; // 加速度计数据（单位：g）
+        data.accelY = accel.y / 16384.0f;
+        data.accelZ = accel.z / 16384.0f;
+        data.gyroX = gyro.x / 131.0f;    // 陀螺仪数据（单位：°/s）
+        data.gyroY = gyro.y / 131.0f;
+        data.gyroZ = gyro.z / 131.0f;
 
         // 提取四元数分量
-        qW = q.w;
-        qX = q.x;
-        qY = q.y;
-        qZ = q.z;
+        data.qW = q.w;
+        data.qX = q.x;
+        data.qY = q.y;
+        data.qZ = q.z;
         
-        return true; // 成功读取数据
+        return data; 
     }
-    return false; // 没有足够的数据包
+    data.valid = false; 
+    return data; // 没有足够的数据包
 }

@@ -1,6 +1,6 @@
 #include "WiFiHandler.h"
 
-void WiFiHandler::initialize(const char* ssid, const char* password, const IPAddress& remoteIP, int udpPort) {
+void WiFiHandler::init(const char* ssid, const char* password, const IPAddress& remoteIP, int udpPort) {
     this->udpPort = udpPort;
     this->remoteIP = remoteIP;
     WiFi.begin(ssid, password);
@@ -37,3 +37,39 @@ void WiFiHandler::sendData(float accelX, float accelY, float accelZ,
     udp.print(buffer);
     udp.endPacket();
 }
+
+void WiFiHandler::sendData(float accelX, float accelY, float accelZ, 
+                      float gyroX, float gyroY, float gyroZ) {
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer), "%ld,%f,%f,%f,%f,%f,%f",
+    millis(), accelX, accelY, accelZ, gyroX, gyroY, gyroZ);
+    udp.beginPacket(remoteIP, udpPort);
+    udp.print(buffer);
+    udp.endPacket();
+}
+
+void WiFiHandler::sendData(float accelX, float accelY, float accelZ, 
+                      float gyroX, float gyroY, float gyroZ,
+                      float q_w, float q_x, float q_y, float q_z,
+                      float motorASpeed, float motorBSpeed,
+                      int pwmA, int pwmB) {
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer),"%ld,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d",
+                millis(), accelX, accelY, accelZ, gyroX, gyroY, gyroZ, q_w, q_x, q_y, q_z, motorASpeed, motorBSpeed, pwmA, pwmB);
+    udp.beginPacket(remoteIP, udpPort);
+    udp.print(buffer);
+    udp.endPacket();
+}
+
+void WiFiHandler::sendData(float accelX, float accelY, float accelZ, 
+                      float gyroX, float gyroY, float gyroZ,
+                      float motorASpeed, float motorBSpeed,
+                      int pwmA, int pwmB) {
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer),"%ld,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d",
+                millis(), accelX, accelY, accelZ, gyroX, gyroY, gyroZ, motorASpeed, motorBSpeed, pwmA, pwmB);
+    udp.beginPacket(remoteIP, udpPort);
+    udp.print(buffer);
+    udp.endPacket();
+}
+
