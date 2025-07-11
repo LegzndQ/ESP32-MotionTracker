@@ -94,9 +94,11 @@ def draw_3d(quaternion):
 def draw_accel_gyro(ax_accel, ax_gyro, timestamps, accel_history, gyro_history):
     ax_accel.clear()
     ax_gyro.clear()
+    # 确保三个数据长度一致
+    min_len = min(len(timestamps), len(accel_history), len(gyro_history))
 
     # 确保历史数据不为空
-    if len(accel_history) > 0 and len(gyro_history) > 0:
+    if min_len > 0:
         accel_array = np.array(accel_history)
         gyro_array = np.array(gyro_history)
 
