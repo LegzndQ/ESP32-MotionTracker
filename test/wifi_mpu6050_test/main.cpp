@@ -9,8 +9,17 @@
 #include <Wire.h>
 #include <MPU6050_6Axis_MotionApps20.h>
 
-const char* ssid = "your_SSID"; // 替换为你的WiFi SSID
-const char* password = "your_PASSWORD"; // 替换为你的WiFi密码
+// WiFi配置 - 请在config.h中定义这些值
+#ifndef WIFI_SSID
+#define WIFI_SSID "your_SSID"  // 默认值，请修改为实际WiFi名称
+#endif
+
+#ifndef WIFI_PASSWORD  
+#define WIFI_PASSWORD "your_PASSWORD"  // 默认值，请修改为实际WiFi密码
+#endif
+
+const char* ssid = WIFI_SSID;
+const char* password = WIFI_PASSWORD;
 const IPAddress remoteIP(192, 168, 1, 101); // 上位机的 IP 地址
 const int udpPort = 12345; // 上位机的 UDP 端口
 
