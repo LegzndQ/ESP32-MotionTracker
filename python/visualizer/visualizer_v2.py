@@ -96,33 +96,35 @@ def draw_accel_gyro(ax_accel, ax_gyro, timestamps, accel_history, gyro_history):
     ax_gyro.clear()
     # 确保三个数据长度一致
     min_len = min(len(timestamps), len(accel_history), len(gyro_history))
-
     # 确保历史数据不为空
     if min_len > 0:
-        accel_array = np.array(accel_history)
-        gyro_array = np.array(gyro_history)
+        accel_array = np.array(list(accel_history)[-min_len:])
+        gyro_array = np.array(list(gyro_history)[-min_len:])
+        ts_array = list(timestamps)[-min_len:]
+
 
         # 绘制加速度曲线
-        ax_accel.plot(timestamps, accel_array[:, 0], label="Accel X", color="r")
-        ax_accel.plot(timestamps, accel_array[:, 1], label="Accel Y", color="g")
-        ax_accel.plot(timestamps, accel_array[:, 2], label="Accel Z", color="b")
+        ax_accel.plot(ts_array, accel_array[:, 0], label="Accel X", color="r")
+        ax_accel.plot(ts_array, accel_array[:, 1], label="Accel Y", color="g")
+        ax_accel.plot(ts_array, accel_array[:, 2], label="Accel Z", color="b")
         ax_accel.set_title("Acceleration Data")
         ax_accel.set_xlabel("Time")
         ax_accel.set_ylabel("Acceleration (g)")
         ax_accel.legend()
         ax_accel.set_ylim([-1, 1])  # 加速度的量程为 -1 到 1
 
+
         # 绘制角速度曲线
-        ax_gyro.plot(timestamps, gyro_array[:, 0], label="Gyro X", color="c")
-        ax_gyro.plot(timestamps, gyro_array[:, 1], label="Gyro Y", color="m")
-        ax_gyro.plot(timestamps, gyro_array[:, 2], label="Gyro Z", color="y")
+        ax_gyro.plot(ts_array, gyro_array[:, 0], label="Gyro X", color="c")
+        ax_gyro.plot(ts_array, gyro_array[:, 1], label="Gyro Y", color="m")
+        ax_gyro.plot(ts_array, gyro_array[:, 2], label="Gyro Z", color="y")
         ax_gyro.set_title("Gyroscope Data")
         ax_gyro.set_xlabel("Time")
         ax_gyro.set_ylabel("Angular Velocity (°/s)")
         ax_gyro.legend()
         ax_gyro.set_ylim([-125, 125])  # 角速度的量程为 -125 到 125
     else:
-        print("加速度或角速度历史数据为空，无法绘制波形图")  # 可添加标志变量，避免频繁打印
+        print("加速度或角速度历史数据为空，无法绘制波形图")  # 可添加标志变量，避免频繁打印角速度历史数据为空，无法绘制波形图")  # 可添加标志变量，避免频繁打印
     
     pygame.display.flip()  
     plt.pause(0.01)  # 更新图形
