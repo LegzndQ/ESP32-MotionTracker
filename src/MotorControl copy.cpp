@@ -48,7 +48,7 @@ void MotorControl::adjustMotorB(int increment) {
 void MotorControl::setForward(int pwm) {
     motorAPWM = pwm;
     motorBPWM = pwm;
-    setMotorPWM(-motorAPWM, -motorBPWM);
+    setMotorPWM(motorAPWM, motorBPWM);
 }
 
 int MotorControl::getMotorAPWM() const {
